@@ -146,6 +146,83 @@ class ScreenManager {
  */
 
 const SCREENS = {
+  player: {
+    render(data) {
+      const nickname = data.nickname || '';
+      const error = data.error || '';
+      const loading = data.loading || false;
+
+      let errorHtml = '';
+      if (error) {
+        let errorMsg = error;
+        if (error === 'nickname_taken') {
+          errorMsg = '이미 사용 중인 닉네임입니다.';
+        } else if (error === 'database_error') {
+          errorMsg = '서버 오류가 발생했습니다. 다시 시도해주세요.';
+        } else if (error === 'invalid_nickname') {
+          errorMsg = '닉네임은 3-20자, 한글/영문/숫자만 가능합니다.';
+        }
+        errorHtml = `<p class="error-message">${errorMsg}</p>`;
+      }
+
+      return `
+        <div class="screen screen-player">
+          <div class="player-container">
+            <h1 class="player-title">Magica</h1>
+            <p class="player-subtitle">플레이어 설정</p>
+            <form class="player-form">
+              <div class="form-group">
+                <label for="nickname-input">닉네임</label>
+                <input 
+                  type="text" 
+                  id="nickname-input"
+                  class="form-input"
+                  placeholder="닉네임 입력 (3-20자)"
+                  value="${nickname}"
+                  maxlength="20"
+                  ${loading ? 'disabled' : ''}
+                />
+              </div>
+              ${errorHtml}
+              <button 
+                type="button"
+                class="btn btn-primary btn-large ${loading ? 'loading' : ''}"
+                data-action="join_game"
+                ${loading ? 'disabled' : ''}
+              >
+                ${loading ? '설정 중...' : '게임 시작'}
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    },
+    onInput(event, data) {
+      if (event.action === 'join_game') {
+        const nicknameInput = document.querySelector('#nickname-input');
+        const nickname = nicknameInput ? nicknameInput.value.trim() : '';
+        
+        if (!nickname || nickname.length < 3 || nickname.length > 20) {
+          return { data: { error: 'invalid_nickname', nickname } };
+        }
+        
+        // Validate Korean/English/numbers only
+        const validPattern = /^[가-힣a-zA-Z0-9]+$/;
+        if (!validPattern.test(nickname)) {
+          return { data: { error: 'invalid_nickname', nickname } };
+        }
+        
+        return { 
+          data: { 
+            loading: true, 
+            nickname,
+            action: 'join_game'
+          } 
+        };
+      }
+    },
+  },
+
   main: {
     render(data) {
       return `
