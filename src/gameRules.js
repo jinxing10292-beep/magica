@@ -371,12 +371,3 @@ function refreshStatusEffect(gameState, playerId, effectId, baseDuration) {
  * Spell classification helpers (imported from spells.js)
  * These are exported from spells.js and available globally
  */
-let HARMFUL_SPELLS = [];
-let DIRECT_DAMAGE_SPELLS = [];
-
-function initializeGameRules() {
-  if (typeof window !== "undefined" && window.HARMFUL_SPELLS && window.DIRECT_DAMAGE_SPELLS) {
-    HARMFUL_SPELLS = window.HARMFUL_SPELLS;
-    DIRECT_DAMAGE_SPELLS = window.DIRECT_DAMAGE_SPELLS;
-  }
-}

@@ -21,7 +21,8 @@
     
     <!-- Supabase & API (inline module) -->
     <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      // Use a CDN that properly exports createClient
+      import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.0';
       
       const supabaseUrl = 'https://ermfvdnfhnosyjyvlxjq.supabase.co';
       const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybWZ2ZG5maG5vc3lqeXZseGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNzkxNzYsImV4cCI6MjEwNjY1NTE3Nn0.lu_87GX49fkp39zMIAPpMVc3AyUOn7UqSHaUBRXrNes';
