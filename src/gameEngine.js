@@ -37,6 +37,7 @@ class GameState {
     this.turnCount = 0;
     this.gameOver = false;
     this.winner = null;
+    this.turnStarted = false;
 
     // History and logging
     this.battleLog = [];
