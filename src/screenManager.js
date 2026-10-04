@@ -222,7 +222,7 @@ const SCREENS = {
       // Build spell buttons
       let spellButtonsHtml = '';
       const availableSpells = Array.from(SPELLS.values());
-      availableSpells.slice(0, 6).forEach((spell) => {
+      availableSpells.forEach((spell) => {
         const canCast = myStats.mana >= spell.manaCost && isMyTurn;
         const disabled = !canCast ? 'disabled' : '';
         const className = canCast ? 'spell-btn available' : 'spell-btn disabled';
@@ -245,14 +245,25 @@ const SCREENS = {
           entryHtml += `<span class="log-actor">${entry.playerId}</span> 치유 → <span class="log-heal">${entry.finalHealing}</span> 회복`;
         } else if (entry.type === 'status_effect_applied') {
           entryHtml += `<span class="log-actor">${entry.playerId}</span>에게 상태 효과 적용: ${entry.effectId}`;
-        } else if (entry.type === 'dot_damage') {
+        } else if (entry.type === 'turn_start_dot') {
           entryHtml += `<span class="log-actor">${entry.playerId}</span> ${entry.damage} 지속 피해`;
+        } else if (entry.type === 'dot_damage') {
+          // Legacy log entry, keep for compatibility
+          entryHtml += `<span class="log-actor">${entry.playerId}</span> ${entry.damage} 지속 피해`;
+        } else if (entry.type === 'turn_start_mana_recovery') {
+          entryHtml += `<span class="log-actor">${entry.playerId}</span> 마나 ${entry.amount} 회복 (${entry.oldMana} → ${entry.newMana})`;
+        } else if (entry.type === 'turn_start_chill') {
+          entryHtml += `<span class="log-actor">${entry.playerId}</span> 감기로 인해 마나 회복 감소`;
+        } else if (entry.type === 'turn_start_stun_skip') {
+          entryHtml += `<span class="log-actor">${entry.playerId}</span> 기절 상태로 행동 건너뜀`;
         } else if (entry.type === 'death') {
           entryHtml += `<span class="log-death">${entry.playerId} 패배</span>`;
         } else if (entry.type === 'spell_blocked') {
           entryHtml += `마법이 실명으로 인해 차단됨`;
         } else if (entry.type === 'shield_consumed') {
           entryHtml += `${entry.playerId}의 방어막이 소비됨`;
+        } else if (entry.type === 'mirror_reflection') {
+          entryHtml += `반사로 인해 <span class="log-attacker">${entry.attackerId}</span>에게 <span class="log-damage">${entry.damage}</span> 피해`;
         } else {
           entryHtml += entry.type;
         }

@@ -119,30 +119,45 @@ function applyTurnStartSequence(gameState, playerId) {
   let manaRecovery = 15;
   if (hasStatusEffect(player, "chill")) {
     manaRecovery = 5;
+    gameState.battleLog.push({
+      type: "turn_start_chill",
+      playerId,
+    });
   }
 
   // 2. Recover mana (bounded by maxMana)
+  const oldMana = player.mana;
   player.mana = Math.min(player.mana + manaRecovery, player.maxMana);
+  gameState.battleLog.push({
+    type: "turn_start_mana_recovery",
+    playerId,
+    amount: manaRecovery,
+    oldMana,
+    newMana: player.mana,
+  });
 
   // 3. Apply DOT damage (poison: 7 per turn, pain: 5 per turn)
   let totalDOT = 0;
+  const dotSources = [];
 
   if (hasStatusEffect(player, "poison")) {
     totalDOT += 7;
+    dotSources.push("poison");
   }
 
   if (hasStatusEffect(player, "pain")) {
     totalDOT += 5;
+    dotSources.push("pain");
   }
 
   // Apply DOT (not affected by modifiers)
   if (totalDOT > 0) {
     player.hp = Math.max(0, player.hp - totalDOT);
     gameState.battleLog.push({
-      type: "dot_damage",
+      type: "turn_start_dot",
       playerId,
       damage: totalDOT,
-      effects: ["poison", "pain"].filter((e) => hasStatusEffect(player, e)),
+      effects: dotSources,
     });
   }
 
@@ -160,7 +175,7 @@ function applyTurnStartSequence(gameState, playerId) {
   // 5. Check stun (player skips action this turn)
   if (hasStatusEffect(player, "stun")) {
     gameState.battleLog.push({
-      type: "stun_effect",
+      type: "turn_start_stun_skip",
       playerId,
     });
   }
@@ -207,10 +222,13 @@ function applyActionSequence(gameState, spell, attacker, defender) {
     return { valid: true, reason: "blind_cancelled" };
   }
 
+  // 4. Execute spell effect (get the effect result once, reuse it)
+  const effectResult = spell.effect(attacker, defender, gameState, {});
+
   // 3. Check mirror reflection (only for direct damage)
   if (isDirectDamage && hasStatusEffect(defender, "mirror")) {
     // Attacker takes 50% of base damage (ignores all modifiers)
-    const reflectedDamage = Math.max(1, Math.floor(spell.effect({}, {}, gameState, {}).baseDamage * 0.5));
+    const reflectedDamage = Math.max(1, Math.floor(effectResult.baseDamage * 0.5));
     attacker.hp = Math.max(0, attacker.hp - reflectedDamage);
 
     gameState.battleLog.push({
@@ -218,16 +236,13 @@ function applyActionSequence(gameState, spell, attacker, defender) {
       defenderId: defender.id,
       attackerId: attacker.id,
       damage: reflectedDamage,
-      baseSpellDamage: spell.effect({}, {}, gameState, {}).baseDamage,
+      baseSpellDamage: effectResult.baseDamage,
     });
 
     // Shield is not consumed by reflected damage
     // Spell effect is not applied (attacker takes damage instead)
     return { valid: true, reason: "mirror_reflected" };
   }
-
-  // 4. Execute spell effect
-  const effectResult = spell.effect(attacker, defender, gameState, {});
 
   if (effectResult.type === "direct_damage") {
     const damage = calculateDamage(effectResult.baseDamage, attacker, defender, gameState);

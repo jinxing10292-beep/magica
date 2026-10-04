@@ -142,6 +142,13 @@ class GameState {
     const attacker = this.getPlayer(playerId);
     const defender = this.getPlayer(targetId);
 
+    // Validate spell early, before applying turn-start sequence
+    // This ensures we don't mark turnStarted if the spell cast will fail
+    const validation = validateSpellCast(spell, attacker, defender, this);
+    if (!validation.valid) {
+      return { success: false, message: validation.reason };
+    }
+
     // Apply turn-start sequence at the beginning of the turn (only once)
     if (!this.turnStarted) {
       const turnStartResult = applyTurnStartSequence(this, playerId);
